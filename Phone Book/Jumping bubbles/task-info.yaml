@@ -1,0 +1,75 @@
+type: edu
+custom_name: stage2
+files:
+- name: test/PhoneBookTest.java
+  visible: false
+  text: |
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import org.hyperskill.hstest.testcase.TestCase;
+    import phonebook.MainKt;
+
+    import java.util.Arrays;
+    import java.util.List;
+
+    public class PhoneBookTest extends StageTest {
+        public PhoneBookTest() {
+            super(MainKt.class);
+        }
+
+        @Override
+        public List<TestCase> generate() {
+            return Arrays.asList(
+                new TestCase().setTimeLimit(30 * 60 * 1000)
+            );
+        }
+
+        @Override
+        public CheckResult check(String reply, Object clue) {
+            reply = reply.toLowerCase();
+            return new CheckResult(
+                reply.contains("start searching")
+                    && reply.contains("found")
+                    && reply.contains("min.")
+                    && reply.contains("sec.")
+                    && reply.contains("ms.")
+                    && reply.contains("sorting time")
+                    && reply.contains("searching time")
+                    && reply.contains("linear search")
+                    && reply.contains("bubble sort")
+                    && reply.contains("jump search"));
+        }
+    }
+  learner_created: false
+- name: src/phonebook/Main.kt
+  visible: true
+  text: |-
+    package phonebook
+
+    import java.io.File
+
+    fun main() {
+        println("Start searching...")
+        val time = System.currentTimeMillis()
+        val fileName = "D:\\Users\\Artur\\Downloads\\directory.txt"
+        val fileTest = "D:\\Users\\Artur\\Downloads\\find.txt"
+        val test = File(fileTest).readLines()
+        val phoneBook = File(fileName).readLines()
+        var match = 0
+
+        for (i in test.indices) {
+            for (j in phoneBook.indices) {
+                if (phoneBook[j].contains(test[1])) {
+                    match++
+                }
+            }
+
+        }
+        val endTime = (System.currentTimeMillis() - time)
+        val time2 = "${endTime / 1000 / 60} min. ${(endTime / 1000) % 60} sec. ${endTime % 1000} ms."
+        println("Found $match / 500 entries. Time taken: $time2")
+    }
+  learner_created: true
+feedback_link: https://hyperskill.org/projects/86/stages/477/implement
+status: Solved
+record: 2

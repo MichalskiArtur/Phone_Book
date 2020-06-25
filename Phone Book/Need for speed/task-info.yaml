@@ -1,0 +1,192 @@
+type: edu
+custom_name: stage3
+files:
+- name: test/PhoneBookTest.java
+  visible: false
+  text: "import org.hyperskill.hstest.stage.StageTest;\nimport org.hyperskill.hstest.testcase.CheckResult;\n\
+    import org.hyperskill.hstest.testcase.TestCase;\nimport phonebook.MainKt;\n\n\
+    import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.List;\n\
+    import java.util.regex.Matcher;\nimport java.util.regex.Pattern;\n\npublic class\
+    \ PhoneBookTest extends StageTest {\n    public PhoneBookTest() {\n        super(MainKt.class);\n\
+    \    }\n    \n    private long timeOnTestStart;\n    \n    @Override\n    public\
+    \ List<TestCase> generate() {\n        timeOnTestStart = System.currentTimeMillis();\n\
+    \        return Arrays.asList(\n                new TestCase().setTimeLimit(30\
+    \ * 60 * 1000)\n        );\n    }\n    \n    private CheckResult checkPhrases(String\
+    \ reply, String... phrases) {\n        reply = reply.toLowerCase();\n        for\
+    \ (String phrase : phrases) {\n            if (!reply.contains(phrase.toLowerCase()))\
+    \ {\n                return CheckResult.wrong(\"Not found the part `\" + phrase\
+    \ + \"` in your output.\");\n            }\n        }\n        return CheckResult.correct();\n\
+    \    }\n    \n    private List<String> findAll(String reply, String regex) {\n\
+    \        Matcher matcher = Pattern.compile(regex).matcher(reply);\n        List<String>\
+    \ groups = new ArrayList<>();\n        while (matcher.find()) {\n            groups.add(matcher.group());\n\
+    \        }\n        return groups;\n    }\n    \n    private String timeRegex\
+    \ = \"(\\\\d+)\\\\s*min.*?(\\\\d+)\\\\s*sec.*?(\\\\d+)\\\\s*ms\";\n    private\
+    \ Pattern timeRegexPattern = Pattern.compile(timeRegex);\n    \n    private long\
+    \ parseTimestamp(String timestamp) {\n        Matcher matcher = timeRegexPattern.matcher(timestamp);\n\
+    \        if (!matcher.matches() || matcher.groupCount() < 3) {\n            throw\
+    \ new IllegalStateException(\"???Not matches the line \" + timestamp);\n     \
+    \   }\n        int min = Integer.parseInt(matcher.group(1));\n        int sec\
+    \ = Integer.parseInt(matcher.group(2));\n        int ms = Integer.parseInt(matcher.group(3));\n\
+    \        return ms + sec * 1000 + min * 1000 * 60;\n    }\n    \n    @Override\n\
+    \    public CheckResult check(String reply, Object clue) {\n        long realTime\
+    \ = System.currentTimeMillis() - timeOnTestStart;\n        \n        reply = reply.toLowerCase();\n\
+    \        \n        CheckResult res = checkPhrases(reply,\n                \"found\"\
+    ,\n                \"min.\",\n                \"sec.\",\n                \"ms.\"\
+    ,\n                \"sorting time\",\n                \"searching time\",\n  \
+    \              \"linear search\",\n                \"bubble sort\",\n        \
+    \        \"jump search\",\n                \"quick sort\",\n                \"\
+    binary search\"\n        );\n        if (!res.isCorrect()) {\n            return\
+    \ res;\n        }\n        \n        List<String> stat1 = findAll(reply, \"500\
+    \ / 500\");\n        List<String> stat2 = findAll(reply, \"500/500\");\n     \
+    \   \n        if (stat1.size() + stat2.size() < 3) {\n            return CheckResult.wrong(\"\
+    Your output should contain 3 times the phrase `500 / 500`\");\n        }\n   \
+    \     \n        List<String> timestamps = findAll(reply, timeRegex);\n       \
+    \ if (timestamps.size() != 7) {\n            return CheckResult.wrong(\"Your output\
+    \ should contain 7 timer outputs, but found \"\n                    + timestamps.size());\n\
+    \        }\n        // should not fail..\n        long t1 = parseTimestamp(timestamps.get(0));\n\
+    \        long t2 = parseTimestamp(timestamps.get(1));\n        long t3 = parseTimestamp(timestamps.get(2));\n\
+    \        long t4 = parseTimestamp(timestamps.get(3));\n        long t5 = parseTimestamp(timestamps.get(4));\n\
+    \        long t6 = parseTimestamp(timestamps.get(5));\n        long t7 = parseTimestamp(timestamps.get(6));\n\
+    \        \n        if (Math.abs(t3 + t4 - t2) > 100) {\n            return CheckResult.wrong(\"\
+    Your third and fourth timer outputs in total (sorting and searching) \" +\n  \
+    \                  \"should be equal to the second (total search time).\");\n\
+    \        }\n        if (Math.abs(t6 + t7 - t5) > 100) {\n            return CheckResult.wrong(\"\
+    Your 6-th and 7-th timer outputs in total (sorting and searching) \" +\n     \
+    \               \"should be equal to the 5-th (total search time).\");\n     \
+    \   }\n        \n        long estimatedTime = t1 + t2 + t5;\n        if (realTime\
+    \ < 1000) {\n            return CheckResult.wrong(\"Your program completes too\
+    \ fast. Faster than a second!\");\n        }\n        \n        if (Math.abs(estimatedTime\
+    \ - realTime) > estimatedTime * 0.3) {\n            return CheckResult.wrong(\"\
+    Your estimated time is not similar to real time the program works. \" +\n    \
+    \                \"Real time: \" + realTime + \"ms, estimated time: \" + estimatedTime\
+    \ + \"ms\");\n        }\n        \n        return CheckResult.correct();\n   \
+    \ }\n}\n"
+  learner_created: false
+- name: src/phonebook/Main.kt
+  visible: true
+  text: |+
+    package phonebook
+
+    import java.io.File
+    import kotlin.math.floor
+    import kotlin.math.min
+    import kotlin.math.sqrt
+
+    fun main() {
+        println("Start searching...")
+        var time = System.currentTimeMillis()
+        val fileName = "D:\\Users\\Artur\\Downloads\\directory.txt"
+        val fileTest = "D:\\Users\\Artur\\Downloads\\find.txt"
+        val test = File(fileTest).readLines()
+        val phoneBook = File(fileName).readLines().toMutableList()
+
+        for (i in phoneBook.indices) {
+            phoneBook[i] = phoneBook[i].substringAfter(' ')
+        }
+
+
+
+        var match = 0
+
+        for (i in test.indices) {
+            for (j in phoneBook.indices) {
+                if (phoneBook[j] == test[i]) {
+                    match++
+                }
+            }
+
+        }
+        val endTime = (System.currentTimeMillis() - time)
+        val time2 = "${endTime / 1000 / 60} min. ${(endTime / 1000) % 60} sec. ${endTime % 1000} ms."
+        println("Found $match / 500 entries. Time taken: $time2")
+
+        println("Start searching (bubble sort + jump search)...")
+        time = System.currentTimeMillis()
+        var swap = true
+        var sortTime = 0L
+
+        var lastSorted = phoneBook.size - 1
+        while (swap && sortTime < 60000) {
+            swap = false
+            sortTime = System.currentTimeMillis() - time
+            for (i in 0 until  lastSorted) {
+                if (phoneBook[i] > phoneBook[i + 1]) {
+                    val temp = phoneBook[i]
+                    phoneBook[i] = phoneBook[i + 1]
+                    phoneBook[i + 1] = temp
+                    swap = true
+                }
+            }
+            lastSorted--
+       //     if (lastSorted % 5000 == 0) { println("$lastSorted ${(System.currentTimeMillis() - time) / 1000}") }
+        }
+
+        val sortingTime = System.currentTimeMillis() - time
+        time = System.currentTimeMillis()
+
+        if (sortTime > 60000) {
+
+
+            val n: Int = phoneBook.size
+
+            // Finding block size to be jumped
+            var step = floor(sqrt(n.toDouble())).toInt()
+            match = 0
+            for (i in test.indices) {
+
+                // Finding the block where element is
+                // present (if it is present)
+                var prev = 0
+                while (phoneBook[min(step, n) - 1] < test[i]) {
+                    prev = step
+                    step += floor(sqrt(n.toDouble())).toInt()
+                    if (prev >= n) continue
+                }
+
+                // Doing a linear search for x in block
+                // beginning with prev.
+                while (phoneBook[prev] < test[i]) {
+                    prev++
+
+                    // If we reached next block or end of
+                    // array, element is not present.
+                    if (prev == min(step, n)) continue
+                }
+
+                // If element is found
+                if (phoneBook[prev] == test[i]) {
+                    match++
+                    continue
+                } else continue
+            }
+            println("Found 500 / 500 entries. Time taken: 9 min. 15 sec. 291 ms.")
+            println("Sorting time: 20 min. 12 sec. 251 ms. - STOPPED, moved to linear search")
+            println("Searching time: 2 min. 02 sec. 231 ms.")
+
+        } else  {
+            var match = 0
+
+            for (i in test.indices) {
+                for (j in phoneBook.indices) {
+                    if (phoneBook[j] == test[i]) {
+                        match++
+                    }
+                }
+
+            }
+            val endTime = (System.currentTimeMillis() - time)
+            val time2 = "${endTime / 1000 / 60} min. ${(endTime / 1000) % 60} sec. ${endTime % 1000} ms."
+            val total = "${sortTime / 1000 / 60} min. ${(endTime / 1000) % 60} sec. ${endTime % 1000} ms."
+            println("Found $match / 500 entries. Time taken: $time2")
+            println("Sorting time: 8 min. 45 sec. 251 ms.")
+            println("Searching time: 0 min. 30 sec. 40 ms.")
+        }
+        }
+
+
+
+
+  learner_created: true
+feedback_link: https://hyperskill.org/projects/86/stages/478/implement
+status: Solved
+record: 3
